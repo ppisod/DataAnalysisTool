@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.jackl.Controllers.DataAnalysis"
+            prefHeight="800.0" prefWidth="1200.0">
+<top>
+    <VBox>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <padding>
+                <Insets top="10" left="10" right="10" bottom="10"/>
+            </padding>
+            <Button text="Back" onAction="#onBack"/>
+            <Label fx:id="tableNameLabel"/>
+        </HBox>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <padding>
+                <Insets left="10" right="10" bottom="10"/>
+            </padding>
+            <Label text="Variables:"/>
+            <ComboBox fx:id="IV" promptText="Choose IV..."/>
+            <ComboBox fx:id="DV" promptText="Choose DV..."/>
+            <ComboBox fx:id="DV2" promptText="Choose DV2..."/>
+            <ComboBox fx:id="DV3" promptText="Choose DV3..."/>
+        </HBox>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <padding>
+                <Insets left="10" right="10" bottom="10"/>
+            </padding>
+            <Label text="Sampling"/>
+            <ComboBox fx:id="sortBy" promptText="Sort by..."/>
+            <Label text="Limit to:"/>
+            <TextField fx:id="limitToFirstLast" promptText="first/last"/>
+            <TextField fx:id="limitToNum" promptText="# of entries"/>
+        </HBox>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <padding>
+                <Insets left="10" right="10" bottom="10"/>
+            </padding>
+            <Button text="Go!" onAction="#goButton"/>
+            <Label fx:id="statusLabel" text=""/>
+        </HBox>
+    </VBox>
+</top>
+<center>
+    <javafx.scene.chart.ScatterChart fx:id="chart" pickOnBounds="false">
+        <xAxis><javafx.scene.chart.NumberAxis fx:id="xAxis" label="IV"/></xAxis>
+        <yAxis><javafx.scene.chart.NumberAxis fx:id="yAxis" label="DV"/></yAxis>
+        <padding>
+            <Insets left="10" right="10" bottom="10"/>
+        </padding>
+    </javafx.scene.chart.ScatterChart>
+</center>
+</BorderPane>

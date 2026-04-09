@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.jackl.Controllers.MainScreen"
+            prefHeight="800.0" prefWidth="1200.0">
+<top>
+    <VBox>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <padding>
+                <Insets top="10" left="10" right="10" bottom="10"/>
+            </padding>
+            <Button text="Import CSV..." fx:id="MountButton" onAction="#onAdd"/>
+            <Button text="Remove Selected" onAction="#onRemove"/>
+            <Label fx:id="statusLabel" text="Ready"/>
+        </HBox>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <padding>
+                <Insets left="10" right="10" bottom="10"/>
+            </padding>
+            <Button text="Continue..." fx:id="ContinueButton" onAction="#cont"/>
+            <Label fx:id="selectedLabel" text="Select a table!"/>
+        </HBox>
+    </VBox>
+</top>
+<center>
+    <ListView fx:id="tableList">
+        <padding>
+            <Insets left="10" right="10" bottom="10"/>
+        </padding>
+    </ListView>
+</center>
+</BorderPane>

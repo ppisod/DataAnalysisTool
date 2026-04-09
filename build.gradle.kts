@@ -5,7 +5,7 @@ plugins {
 
 javafx {
     version = "26"
-    modules("javafx.controls")
+    modules("javafx.controls", "javafx.fxml")
 }
 
 group = "org.jackl"

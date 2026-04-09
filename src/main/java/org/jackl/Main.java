@@ -1,12 +1,11 @@
 package org.jackl;
 
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import org.jackl.Data.Database;
 
 public class Main extends Application {
 
@@ -16,21 +15,16 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        stage.setTitle("ppi-spotify-analysis");
-        Button button = new Button();
-        button.setText("hi");
+        stage.setTitle("jackl-data-analysis");
 
-        button.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                IO.println("hi");
-            }
-        });
+        Parent root = FXMLLoader.load(getClass().getResource("Layouts/MainScreen.fxml"));
 
-        StackPane root = new StackPane();
-        root.getChildren().add(button);
-        stage.setScene(new Scene(root, 300, 250));
+        stage.setScene(new Scene(root));
         stage.show();
+    }
 
+    @Override
+    public void stop() {
+        Database.close();
     }
 }
