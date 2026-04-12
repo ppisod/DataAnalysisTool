@@ -70,8 +70,6 @@ public class DataAnalysis {
                 cols.add(rs.getString("name"));
             }
         }
-
-        System.out.println("Columns found: " + cols);
         for (String col : cols) {
             DV.getItems().add(col);
             DV2.getItems().add(col);
@@ -115,13 +113,13 @@ public class DataAnalysis {
         if (constraints.isEmpty()) {
             constraintLabel.setText("(none)");
         } else {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder labelText = new StringBuilder();
             for (int i = 0; i < constraints.size(); i++) {
-                if (i > 0) sb.append(", ");
+                if (i > 0) labelText.append(", ");
                 Constraint c = constraints.get(i);
-                sb.append(c.col).append(" ").append(c.op).append(" ").append(c.val);
+                labelText.append(c.col).append(" ").append(c.op).append(" ").append(c.val);
             }
-            constraintLabel.setText(sb.toString());
+            constraintLabel.setText(labelText.toString()); // "col < 5000, ..."
         }
     }
 
@@ -141,7 +139,7 @@ public class DataAnalysis {
         String dvCol = DV.getValue();
 
         if (ivCol == null || dvCol == null) {
-            statusLabel.setText("Select at least IV and DV");
+            statusLabel.setText("Select at least 1IV and 1DV");
             return;
         }
 
@@ -153,7 +151,7 @@ public class DataAnalysis {
             yAxis.setLabel(dvCol);
             XYChart.Series<Number, Number> series1 = queryToSeries(query, ivCol, dvCol, dvCol);
             chart.getData().add(series1);
-            if (DV2.getValue() != null) {
+            if (DV2.getValue() != null) { // optional DVs
                 String q2 = buildQuery(ivCol, DV2.getValue());
                 XYChart.Series<Number, Number> s2 = queryToSeries(q2, ivCol, DV2.getValue(), DV2.getValue());
                 chart.getData().add(s2);
@@ -170,49 +168,45 @@ public class DataAnalysis {
     }
 
     private String buildQuery(String ivCol, String dvCol) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("SELECT \"").append(esc(ivCol)).append("\", \"").append(esc(dvCol)).append("\"");
-        sb.append(" FROM \"").append(esc(tableName)).append("\"");
-        sb.append(" WHERE \"").append(esc(ivCol)).append("\" IS NOT NULL");
-        sb.append(" AND \"").append(esc(dvCol)).append("\" IS NOT NULL"); // basic context
+        StringBuilder Query = new StringBuilder();
+        Query.append("SELECT \"").append(esc(ivCol)).append("\", \"").append(esc(dvCol)).append("\"");
+        Query.append(" FROM \"").append(esc(tableName)).append("\"");
+        Query.append(" WHERE \"").append(esc(ivCol)).append("\" IS NOT NULL");
+        Query.append(" AND \"").append(esc(dvCol)).append("\" IS NOT NULL");
         for (Constraint c : constraints) { // constraints
-            sb.append(" AND CAST(\"").append(esc(c.col)).append("\" AS REAL) ")
+            Query.append(" AND CAST(\"").append(esc(c.col)).append("\" AS REAL) ") // if column is text, this will just throw
               .append(c.op).append(" ").append(Double.parseDouble(c.val));
         }
-
         if (randomSample.isSelected()) { // random ordering
-            sb.append(" ORDER BY RANDOM()");
+            Query.append(" ORDER BY RANDOM()");
         } else if (sortBy.getValue() != null) {
-            sb.append(" ORDER BY \"").append(esc(sortBy.getValue())).append("\"");
+            Query.append(" ORDER BY \"").append(esc(sortBy.getValue())).append("\"");
             String fl = limitToFirstLast.getText().trim().toLowerCase();
             if (fl.equals("last")) {
-                sb.append(" DESC");
+                Query.append(" DESC");
             }
         }
-
         String numText = limitToNum.getText().trim();
         if (!numText.isEmpty()) {
             try {
                 int limit = Integer.parseInt(numText);
-                sb.append(" LIMIT ").append(limit);
+                Query.append(" LIMIT ").append(limit);
             } catch (NumberFormatException ignored) {
             }
         }
-
-        return sb.toString();
+        return Query.toString();
     }
-
     private XYChart.Series<Number, Number> queryToSeries(String query, String ivCol, String dvCol, String seriesName) throws Exception {
         XYChart.Series<Number, Number> series = new XYChart.Series<>();
         series.setName(seriesName);
-        Connection conn = Database.getConnection();
-        try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(query)) {
-            while (rs.next()) {
+        Connection Connect = Database.getConnection();
+        try (Statement State = Connect.createStatement();
+             ResultSet Results = State.executeQuery(query)) {
+            while (Results.next()) {
                 try {
-                    double x = rs.getDouble(1);
-                    double y = rs.getDouble(2);
-                    if (!rs.wasNull()) {
+                    double x = Results.getDouble(1);
+                    double y = Results.getDouble(2);
+                    if (!Results.wasNull()) {
                         series.getData().add(new XYChart.Data<>(x, y));
                     }
                 } catch (Exception ignored) {
@@ -222,7 +216,6 @@ public class DataAnalysis {
 
         return series;
     }
-
     private void fitAxes() {
         double xMin = Double.MAX_VALUE, xMax = -Double.MAX_VALUE;
         double yMin = Double.MAX_VALUE, yMax = -Double.MAX_VALUE;
@@ -250,13 +243,9 @@ public class DataAnalysis {
         yAxis.setUpperBound(yMax + yPad);
         yAxis.setTickUnit((yMax - yMin) / 10);
     }
-
-    /// safety
     private String esc(String col) {
         return col.replace("\"", "\"\"");
     }
 
-    private record Constraint(String col, String op, String val) {
-        // rec for holdings
-    }
+    private record Constraint(String col, String op, String val) { }
 }

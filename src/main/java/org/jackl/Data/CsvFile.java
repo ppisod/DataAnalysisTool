@@ -42,11 +42,11 @@ public class CsvFile {
             }
         }
 
-        int checkCount = entriesToCheckForType <= 0 ? allRows.size() : Math.min(entriesToCheckForType, allRows.size());
-        DataTypes[] types = inferTypes(header.length, allRows.subList(0, checkCount));
+        int RowsToCheck = entriesToCheckForType <= 0 ? allRows.size() : Math.min(entriesToCheckForType, allRows.size());
+        DataTypes[] ColumnDataTypes = inferTypes(header.length, allRows.subList(0, RowsToCheck));
 
         String name = sanitizeName(file.getName());
-        return new CsvFile(name, List.of(header), types, allRows);
+        return new CsvFile(name, List.of(header), ColumnDataTypes, allRows);
     }
 
     private static DataTypes[] inferTypes(int colCount, List<String[]> sample) {
@@ -67,7 +67,7 @@ public class CsvFile {
                     } catch (NumberFormatException ignored) {
                     }
                     types[i] = DataTypes.FLOAT;
-                }
+                } // if Int check fails > check Float > etc
 
                 if (types[i] == DataTypes.FLOAT) {
                     try {
@@ -77,12 +77,14 @@ public class CsvFile {
                     }
                     types[i] = DataTypes.TEXT;
                 }
+                // type inferred always text if even one fail
             }
         }
 
         return types;
     }
 
+    // TODO: seperators can include ",", ";", ... Include support for other seperators
     /// "abc,def,123" -> ["abc", "def", "123"]
     private static String[] parseRow(String line) {
         List<String> fields = new ArrayList<>();

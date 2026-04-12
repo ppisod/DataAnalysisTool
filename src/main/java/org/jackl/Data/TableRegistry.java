@@ -42,21 +42,20 @@ public class TableRegistry {
 
     public static List<TableInfo> getAll() throws Exception {
         List<TableInfo> tables = new ArrayList<>();
-        Connection conn = Database.getConnection();
-        try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(
+        Connection Connection = Database.getConnection();
+        try (Statement State = Connection.createStatement();
+             ResultSet ResultSetPerTable = State.executeQuery(
                      "SELECT table_name, source_path, imported_at FROM _table_registry ORDER BY imported_at DESC")) {
-            while (rs.next()) {
+            while (ResultSetPerTable.next()) {
                 tables.add(new TableInfo(
-                        rs.getString("table_name"),
-                        rs.getString("source_path"),
-                        rs.getString("imported_at")
+                        ResultSetPerTable.getString("table_name"),
+                        ResultSetPerTable.getString("source_path"),
+                        ResultSetPerTable.getString("imported_at")
                 ));
             }
         }
         return tables;
     }
 
-    public record TableInfo(String tableName, String sourcePath, String importedAt) {
-    }
+    public record TableInfo(String tableName, String sourcePath, String importedAt) {}
 }

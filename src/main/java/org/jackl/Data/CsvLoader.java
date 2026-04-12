@@ -31,7 +31,7 @@ public class CsvLoader {
 
     private static void createTable(Connection conn, CsvFile csv) throws SQLException {
         try (Statement stmt = conn.createStatement()) {
-            stmt.execute("DROP TABLE IF EXISTS \"" + csv.name + "\""); // replaced
+            stmt.execute("DROP TABLE IF EXISTS \"" + csv.name + "\""); // replace with new table
 
             StringBuilder sql = new StringBuilder("CREATE TABLE \"" + csv.name + "\" (");
             for (int i = 0; i < csv.columns.size(); i++) {
@@ -67,7 +67,7 @@ public class CsvLoader {
                 ps.addBatch();
             }
             ps.executeBatch();
-            conn.commit();
+            conn.commit(); // instead of commiting with each stmt, this is faster
         } catch (SQLException e) {
             conn.rollback();
             throw e;
