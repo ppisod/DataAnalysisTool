@@ -7,11 +7,14 @@ import javafx.scene.Parent;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.ScatterChart;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.Alert;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import org.jackl.Data.Database;
+import org.jackl.Data.MemoryGuard;
+import org.jackl.Data.QueryBuilder;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -134,6 +137,20 @@ public class DataAnalysis {
     }
 
     @FXML
+    private void onTrendAnalysis(ActionEvent actionEvent) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/jackl/Layouts/TrendAnalysis.fxml"));
+            Parent root = loader.load();
+            TrendAnalysis ctrl = loader.getController();
+            ctrl.setTableName(tableName);
+            ctrl.init();
+            tableNameLabel.getScene().setRoot(root);
+        } catch (Exception e) {
+            statusLabel.setText("Error: " + e.getMessage());
+        }
+    }
+
+    @FXML
     public void goButton(ActionEvent actionEvent) {
         String ivCol = IV.getValue();
         String dvCol = DV.getValue();
@@ -144,6 +161,18 @@ public class DataAnalysis {
         }
 
         try {
+            int rowCount = countRows(ivCol, dvCol);
+            int userLimit = parseLimit();
+            int effectiveRows = (userLimit > 0) ? Math.min(userLimit, rowCount) : rowCount;
+            int seriesCount = 1;
+            if (DV2.getValue() != null) seriesCount++;
+            if (DV3.getValue() != null) seriesCount++;
+            int totalPoints = effectiveRows * seriesCount;
+
+            if (!MemoryGuard.checkAndWarn(totalPoints)) {
+                return;
+            }
+
             String query = buildQuery(ivCol, dvCol);
             statusLabel.setText("Query: " + query);
             chart.getData().clear();
@@ -151,7 +180,7 @@ public class DataAnalysis {
             yAxis.setLabel(dvCol);
             XYChart.Series<Number, Number> series1 = queryToSeries(query, ivCol, dvCol, dvCol);
             chart.getData().add(series1);
-            if (DV2.getValue() != null) { // optional DVs
+            if (DV2.getValue() != null) {
                 String q2 = buildQuery(ivCol, DV2.getValue());
                 XYChart.Series<Number, Number> s2 = queryToSeries(q2, ivCol, DV2.getValue(), DV2.getValue());
                 chart.getData().add(s2);
@@ -167,34 +196,53 @@ public class DataAnalysis {
         }
     }
 
-    private String buildQuery(String ivCol, String dvCol) {
-        StringBuilder Query = new StringBuilder();
-        Query.append("SELECT \"").append(esc(ivCol)).append("\", \"").append(esc(dvCol)).append("\"");
-        Query.append(" FROM \"").append(esc(tableName)).append("\"");
-        Query.append(" WHERE \"").append(esc(ivCol)).append("\" IS NOT NULL");
-        Query.append(" AND \"").append(esc(dvCol)).append("\" IS NOT NULL");
-        for (Constraint c : constraints) { // constraints
-            Query.append(" AND CAST(\"").append(esc(c.col)).append("\" AS REAL) ") // if column is text, this will just throw
-              .append(c.op).append(" ").append(Double.parseDouble(c.val));
+    private String buildWhere(String ivCol, String dvCol) {
+        QueryBuilder qb = QueryBuilder.where()
+            .notNull(ivCol)
+            .notNull(dvCol);
+        for (Constraint c : constraints) {
+            qb.constrain(c.col, c.op, Double.parseDouble(c.val));
         }
-        if (randomSample.isSelected()) { // random ordering
-            Query.append(" ORDER BY RANDOM()");
-        } else if (sortBy.getValue() != null) {
-            Query.append(" ORDER BY \"").append(esc(sortBy.getValue())).append("\"");
-            String fl = limitToFirstLast.getText().trim().toLowerCase();
-            if (fl.equals("last")) {
-                Query.append(" DESC");
-            }
+        return qb.build();
+    }
+
+    private int countRows(String ivCol, String dvCol) throws Exception {
+        String sql = "SELECT COUNT(*) FROM \"" + QueryBuilder.esc(tableName) + "\"" + buildWhere(ivCol, dvCol);
+        try (Statement stmt = Database.getConnection().createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            return rs.next() ? rs.getInt(1) : 0;
         }
+    }
+
+    private int parseLimit() {
         String numText = limitToNum.getText().trim();
         if (!numText.isEmpty()) {
             try {
-                int limit = Integer.parseInt(numText);
-                Query.append(" LIMIT ").append(limit);
-            } catch (NumberFormatException ignored) {
+                return Integer.parseInt(numText);
+            } catch (NumberFormatException ignored) {}
+        }
+        return 0;
+    }
+
+    private String buildQuery(String ivCol, String dvCol) {
+        QueryBuilder qb = QueryBuilder.select()
+            .col(ivCol).col(dvCol)
+            .from(tableName)
+            .where(buildWhere(ivCol, dvCol));
+        if (randomSample.isSelected()) {
+            qb.orderByRandom();
+        } else if (sortBy.getValue() != null) {
+            qb.orderBy(sortBy.getValue());
+            String fl = limitToFirstLast.getText().trim().toLowerCase();
+            if (fl.equals("last")) {
+                qb.desc();
             }
         }
-        return Query.toString();
+        int limit = parseLimit();
+        if (limit > 0) {
+            qb.limit(limit);
+        }
+        return qb.build();
     }
     private XYChart.Series<Number, Number> queryToSeries(String query, String ivCol, String dvCol, String seriesName) throws Exception {
         XYChart.Series<Number, Number> series = new XYChart.Series<>();
@@ -244,7 +292,7 @@ public class DataAnalysis {
         yAxis.setTickUnit((yMax - yMin) / 10);
     }
     private String esc(String col) {
-        return col.replace("\"", "\"\"");
+        return QueryBuilder.esc(col);
     }
 
     private record Constraint(String col, String op, String val) { }

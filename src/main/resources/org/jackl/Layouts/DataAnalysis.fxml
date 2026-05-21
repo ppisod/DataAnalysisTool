@@ -15,6 +15,7 @@
                 <Insets top="10" left="10" right="10" bottom="10"/>
             </padding>
             <Button text="Back" onAction="#onBack"/>
+            <Button text="Trend Analysis" onAction="#onTrendAnalysis"/>
             <Label fx:id="tableNameLabel"/>
         </HBox>
         <HBox spacing="10" alignment="CENTER_LEFT">

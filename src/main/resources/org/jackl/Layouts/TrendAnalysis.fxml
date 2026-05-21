@@ -1,14 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="org.jackl.Controllers.TrendAnalysis"
-            prefHeight="400.0" prefWidth="600.0">
-
+            prefHeight="800.0" prefWidth="1200.0">
+<top>
+    <VBox>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <padding><Insets top="10" left="10" right="10" bottom="10"/></padding>
+            <Button text="Back" onAction="#onBack"/>
+            <Label fx:id="TableNameLabel"/>
+        </HBox>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <padding><Insets left="10" right="10" bottom="10"/></padding>
+            <Label text="Variables:"/>
+            <ComboBox fx:id="IndependentVariable" promptText="Choose IV (REAL)..."/>
+            <ComboBox fx:id="DependentVariable" promptText="Choose DV (REAL)..."/>
+            <Label text="Regression:"/>
+            <ComboBox fx:id="RegressionType" promptText="Type..."/>
+            <Button text="Fit Trend" onAction="#onFit"/>
+            <Label fx:id="StatusLabel"/>
+        </HBox>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <padding><Insets left="10" right="10" bottom="10"/></padding>
+            <Label text="Constraints:"/>
+            <ComboBox fx:id="ConstraintColumn" promptText="Column..."/>
+            <ComboBox fx:id="ConstraintString" promptText="Op..."/>
+            <TextField fx:id="ConstraintValue" promptText="Value"/>
+            <Button text="Add" onAction="#onAddConstraint"/>
+            <Button text="Clear" onAction="#onClearConstraints"/>
+            <Label fx:id="ConstraintLabel" text="(none)"/>
+        </HBox>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <padding><Insets left="10" right="10" bottom="10"/></padding>
+            <Label text="Sampling:"/>
+            <ComboBox fx:id="SortBy" promptText="Sort by..."/>
+            <Label text="Limit to:"/>
+            <TextField fx:id="LimitToFirstLast" promptText="first/last"/>
+            <TextField fx:id="LimitToNumber" promptText="# of entries"/>
+            <CheckBox fx:id="RandomSample" text="Random sample"/>
+        </HBox>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <padding><Insets left="10" right="10" bottom="10"/></padding>
+            <Label text="Equation:"/>
+            <Label fx:id="EquationLabel" text="(none)"/>
+        </HBox>
+    </VBox>
+</top>
+<center>
+    <javafx.scene.chart.LineChart fx:id="Chart" pickOnBounds="false" createSymbols="true">
+        <xAxis><javafx.scene.chart.NumberAxis fx:id="X" label="IV"/></xAxis>
+        <yAxis><javafx.scene.chart.NumberAxis fx:id="Y" label="DV"/></yAxis>
+        <padding><Insets left="10" right="10" bottom="10"/></padding>
+    </javafx.scene.chart.LineChart>
+</center>
 </BorderPane>

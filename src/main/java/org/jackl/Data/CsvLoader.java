@@ -21,25 +21,12 @@ public class CsvLoader {
         return csv.name;
     }
 
-    private static String sqlType(DataTypes type) {
-        return switch (type) {
-            case INT -> "INTEGER";
-            case FLOAT -> "REAL";
-            case TEXT -> "TEXT";
-        };
-    }
-
     private static void createTable(Connection conn, CsvFile csv) throws SQLException {
         try (Statement stmt = conn.createStatement()) {
-            stmt.execute("DROP TABLE IF EXISTS \"" + csv.name + "\""); // replace with new table
+            stmt.execute("DROP TABLE IF EXISTS \"" + csv.name + "\"");
 
-            StringBuilder sql = new StringBuilder("CREATE TABLE \"" + csv.name + "\" (");
-            for (int i = 0; i < csv.columns.size(); i++) {
-                if (i > 0) sql.append(", ");
-                sql.append("\"").append(csv.columns.get(i).replace("\"", "\"\"")).append("\" ").append(sqlType(csv.columnTypes[i]));
-            }
-            sql.append(")");
-            stmt.execute(sql.toString());
+            String sql = QueryBuilder.createTable(csv.name, csv.columns, csv.columnTypes).build();
+            stmt.execute(sql);
         }
     }
 
