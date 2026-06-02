@@ -8,6 +8,7 @@ import javafx.scene.Parent;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.Alert;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -15,7 +16,10 @@ import javafx.scene.control.TextField;
 import org.jackl.Data.Database;
 import org.jackl.Data.MemoryGuard;
 import org.jackl.Data.QueryBuilder;
+import org.jackl.Data.CsvLoader;
+import org.jackl.Data.TableRegistry;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -48,6 +52,14 @@ public class TrendAnalysis {
 
     public void init() throws Exception {
         Connection Connection = Database.getConnection();
+
+        IndependentVariable.getItems().clear();
+        DependentVariable.getItems().clear();
+        SortBy.getItems().clear();
+        ConstraintColumn.getItems().clear();
+        ConstraintString.getItems().clear();
+        RegressionType.getItems().clear();
+
         List<String> RealColumns = new ArrayList<>();
         try (Statement Stmt = Connection.createStatement();
              ResultSet Results = Stmt.executeQuery("PRAGMA table_info(\"" + esc(TableName) + "\")")) {
@@ -75,6 +87,84 @@ public class TrendAnalysis {
     public void setTableName(String TableName) {
         this.TableName = TableName;
         TableNameLabel.setText("Table: " + TableName);
+    }
+
+    @FXML
+    private void onHelp(ActionEvent Event) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Trend / Regression Analysis -- Help");
+        alert.setHeaderText("Trend and Regression Analysis");
+        alert.setContentText("""
+            This screen fits mathematical trend lines to your data and displays the R-squared goodness of fit.
+            
+            BACK -- Return to the scatter-plot analysis screen (your variable selections are preserved).
+            
+            VARIABLES ROW:
+              - IV (Independent Variable): The X-axis column. Only numeric (REAL/INTEGER) columns are shown.
+              - DV (Dependent Variable): The Y-axis column. Only numeric columns are shown.
+              - Regression: Choose the curve type to fit.
+                  Linear       -- y = ax + b
+                  Quadratic    -- y = ax^2 + bx + c
+                  Cubic        -- y = ax^3 + bx^2 + cx + d
+                  Exponential  -- y = a * e^(bx)   (requires y > 0)
+                  Power        -- y = a * x^b      (requires x > 0, y > 0)
+                  Logarithmic  -- y = a * ln(x) + b (requires x > 0)
+              - Fit Trend: Compute and display the regression curve.
+            
+            CONSTRAINTS ROW:
+              - Filter the data using conditions like "col < 5000".
+              - Choose a column, operator, numeric value, then click Add. Click Clear to remove all.
+            
+            SAMPLING ROW:
+              - Sort by: Order data by a column before applying a limit.
+              - Limit to first/last: "first" or "last" to take top or bottom rows after sorting.
+              - # of entries: Maximum number of data points to use.
+              - Random sample: Pick rows randomly instead of sorting.
+            
+            EQUATION -- After fitting, the regression formula is displayed here, along with R-squared and sample size.
+            """);
+        alert.showAndWait();
+    }
+
+    @FXML
+    private void onRefresh(ActionEvent Event) {
+        try {
+            String sourcePath = TableRegistry.getAll().stream()
+                .filter(t -> t.tableName().equals(TableName))
+                .findFirst()
+                .map(TableRegistry.TableInfo::sourcePath)
+                .orElse(null);
+            if (sourcePath == null) {
+                StatusLabel.setText("Source file path not found in registry");
+                return;
+            }
+            File file = new File(sourcePath);
+            if (!file.exists()) {
+                StatusLabel.setText("Source file no longer exists: " + sourcePath);
+                return;
+            }
+
+            CsvLoader.load(file);
+
+            Chart.getData().clear();
+            Constraints.clear();
+            updateConstraintLabel();
+            IndependentVariable.getSelectionModel().clearSelection();
+            DependentVariable.getSelectionModel().clearSelection();
+            SortBy.getSelectionModel().clearSelection();
+            ConstraintColumn.getSelectionModel().clearSelection();
+            ConstraintString.getSelectionModel().clearSelection();
+            LimitToFirstLast.clear();
+            LimitToNumber.clear();
+            RandomSample.setSelected(false);
+            EquationLabel.setText("(none)");
+            X.setAutoRanging(true);
+            Y.setAutoRanging(true);
+            init();
+            StatusLabel.setText("Reloaded " + TableName + " from " + sourcePath);
+        } catch (Exception ex) {
+            StatusLabel.setText("Refresh error: " + ex.getMessage());
+        }
     }
 
     @FXML

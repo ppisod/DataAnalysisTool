@@ -20,12 +20,14 @@
             <Button text="Import CSV..." fx:id="MountButton" onAction="#onAdd"/>
             <Button text="Remove Selected" onAction="#onRemove"/>
             <Label fx:id="statusLabel" text="Ready"/>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <Button text="Help" onAction="#onHelp" style="-fx-base: #5c6bc0; -fx-text-fill: white;"/>
         </HBox>
         <HBox spacing="10" alignment="CENTER_LEFT">
             <padding>
                 <Insets left="10" right="10" bottom="10"/>
             </padding>
-            <Button text="Continue..." fx:id="ContinueButton" onAction="#cont"/>
+            <Button text="Continue..." fx:id="ContinueButton" onAction="#Continue"/>
             <Label fx:id="selectedLabel" text="Select a table!"/>
         </HBox>
     </VBox>

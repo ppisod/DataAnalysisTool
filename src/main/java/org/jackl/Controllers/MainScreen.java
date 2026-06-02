@@ -6,12 +6,12 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.stage.FileChooser;
 import org.jackl.Data.CsvLoader;
-import org.jackl.Data.Database;
 import org.jackl.Data.TableRegistry;
 
 import java.io.File;
@@ -60,6 +60,25 @@ public class MainScreen {
     }
 
     @FXML
+    private void onHelp(ActionEvent actionEvent) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Data Analysis -- Help");
+        alert.setHeaderText("Welcome to Data Analysis");
+        alert.setContentText("""
+            This tool helps you import CSV data and explore it visually.
+            
+            IMPORT CSV -- Click to load one or more CSV files into the database. Each file becomes a table. Supported format: comma-separated values with a header row.
+            
+            REMOVE SELECTED -- Select a table from the list and click to unload it from memory. This does not delete the original CSV file.
+            
+            CONTINUE -- Select a table from the list and click to open the scatter-plot analysis screen for that table.
+            
+            STATUS BAR -- Displays feedback after each action (load success, errors, etc.).
+            """);
+        alert.showAndWait();
+    }
+
+    @FXML
     private void onRemove(ActionEvent actionEvent) {
         String selected = tableList.getSelectionModel().getSelectedItem();
         if (selected == null) return;
@@ -86,7 +105,7 @@ public class MainScreen {
     }
 
     @FXML
-    public void cont(ActionEvent actionEvent) {
+    public void Continue (ActionEvent actionEvent) {
 
         String selected = tableList.getSelectionModel().getSelectedItem();
         int index = tableList.getSelectionModel().getSelectedIndex();

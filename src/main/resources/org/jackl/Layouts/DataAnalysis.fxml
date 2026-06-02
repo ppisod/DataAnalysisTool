@@ -16,7 +16,10 @@
             </padding>
             <Button text="Back" onAction="#onBack"/>
             <Button text="Trend Analysis" onAction="#onTrendAnalysis"/>
+            <Button text="Refresh from disk" onAction="#onRefresh"/>
             <Label fx:id="tableNameLabel"/>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <Button text="Help" onAction="#onHelp" style="-fx-base: #5c6bc0; -fx-text-fill: white;"/>
         </HBox>
         <HBox spacing="10" alignment="CENTER_LEFT">
             <padding>

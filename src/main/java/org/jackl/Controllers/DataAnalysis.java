@@ -15,7 +15,10 @@ import javafx.scene.control.TextField;
 import org.jackl.Data.Database;
 import org.jackl.Data.MemoryGuard;
 import org.jackl.Data.QueryBuilder;
+import org.jackl.Data.CsvLoader;
+import org.jackl.Data.TableRegistry;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -66,6 +69,14 @@ public class DataAnalysis {
     public void init() throws Exception {
         Connection connection = Database.getConnection();
 
+        IV.getItems().clear();
+        DV.getItems().clear();
+        DV2.getItems().clear();
+        DV3.getItems().clear();
+        sortBy.getItems().clear();
+        constraintCol.getItems().clear();
+        constraintOp.getItems().clear();
+
         cols = new ArrayList<>();
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("PRAGMA table_info(\"" + tableName + "\")")) {
@@ -88,6 +99,80 @@ public class DataAnalysis {
     public void setTableName(String tableName) {
         this.tableName = tableName;
         tableNameLabel.setText("Currently inspecting table: " + tableName);
+    }
+
+    @FXML
+    private void onHelp(ActionEvent actionEvent) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Scatter Plot Analysis -- Help");
+        alert.setHeaderText("Scatter Plot Analysis");
+        alert.setContentText("""
+            This screen plots scatter charts of your table data and helps you compare variables.
+            
+            BACK -- Return to the table selection screen.
+            
+            TREND ANALYSIS -- Move to the trend/regression fitting screen using the current table.
+            
+            VARIABLES ROW:
+              - IV (Independent Variable): The column to use for the X axis.
+              - DV / DV2 / DV3 (Dependent Variables): Up to three columns to plot on the Y axis as separate series. At minimum you must choose IV and DV.
+            
+            CONSTRAINTS ROW:
+              - Filter the data with conditions like "col < 5000".
+              - Choose a column, an operator (=, !=, <, <=, >, >=), a numeric value, then click Add.
+              - Built-up constraints appear next to the buttons. Click Clear to remove them all.
+            
+            SAMPLING ROW:
+              - Sort by: Order the data by a column before applying a limit.
+              - Limit to first/last: Type "first" or "last" to take the top or bottom rows after sorting.
+              - # of entries: Maximum number of data points to plot.
+              - Random sample: Select rows at random instead of using sort order.
+            
+            GO! -- Execute the query and render the scatter chart with the current settings.
+            """);
+        alert.showAndWait();
+    }
+
+    @FXML
+    private void onRefresh(ActionEvent actionEvent) {
+        try {
+            String sourcePath = TableRegistry.getAll().stream()
+                .filter(t -> t.tableName().equals(tableName))
+                .findFirst()
+                .map(TableRegistry.TableInfo::sourcePath)
+                .orElse(null);
+            if (sourcePath == null) {
+                statusLabel.setText("Source file path not found in registry");
+                return;
+            }
+            File file = new File(sourcePath);
+            if (!file.exists()) {
+                statusLabel.setText("Source file no longer exists: " + sourcePath);
+                return;
+            }
+
+            CsvLoader.load(file);
+
+            chart.getData().clear();
+            constraints.clear();
+            updateConstraintLabel();
+            IV.getSelectionModel().clearSelection();
+            DV.getSelectionModel().clearSelection();
+            DV2.getSelectionModel().clearSelection();
+            DV3.getSelectionModel().clearSelection();
+            sortBy.getSelectionModel().clearSelection();
+            constraintCol.getSelectionModel().clearSelection();
+            constraintOp.getSelectionModel().clearSelection();
+            limitToFirstLast.clear();
+            limitToNum.clear();
+            randomSample.setSelected(false);
+            xAxis.setAutoRanging(true);
+            yAxis.setAutoRanging(true);
+            init();
+            statusLabel.setText("Reloaded " + tableName + " from " + sourcePath);
+        } catch (Exception e) {
+            statusLabel.setText("Refresh error: " + e.getMessage());
+        }
     }
 
     @FXML
