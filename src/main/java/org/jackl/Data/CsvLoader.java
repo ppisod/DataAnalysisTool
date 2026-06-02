@@ -25,6 +25,8 @@ public class CsvLoader {
         try (Statement stmt = conn.createStatement()) {
             stmt.execute("DROP TABLE IF EXISTS \"" + csv.name + "\"");
 
+
+
             String sql = QueryBuilder.createTable(csv.name, csv.columns, csv.columnTypes).build();
             stmt.execute(sql);
         }
@@ -60,6 +62,11 @@ public class CsvLoader {
                                 try {
                                     ps.setDouble(i + 1, Double.parseDouble(val));
                                 } catch (NumberFormatException e) {
+
+
+
+
+
                                     ps.setNull(i + 1, java.sql.Types.NULL);
                                 }
                             }
@@ -75,6 +82,7 @@ public class CsvLoader {
             conn.rollback();
             throw e;
         } finally {
+
             conn.setAutoCommit(true);
         }
     }

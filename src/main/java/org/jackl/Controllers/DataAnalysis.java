@@ -156,15 +156,19 @@ public class DataAnalysis {
             chart.getData().clear();
             constraints.clear();
             updateConstraintLabel();
+
             IV.getSelectionModel().clearSelection();
             DV.getSelectionModel().clearSelection();
             DV2.getSelectionModel().clearSelection();
             DV3.getSelectionModel().clearSelection();
+
             sortBy.getSelectionModel().clearSelection();
             constraintCol.getSelectionModel().clearSelection();
             constraintOp.getSelectionModel().clearSelection();
+
             limitToFirstLast.clear();
             limitToNum.clear();
+
             randomSample.setSelected(false);
             xAxis.setAutoRanging(true);
             yAxis.setAutoRanging(true);
@@ -282,20 +286,20 @@ public class DataAnalysis {
     }
 
     private String buildWhere(String ivCol, String dvCol) {
-        QueryBuilder qb = QueryBuilder.where()
+        QueryBuilder queryB = QueryBuilder.where()
             .notNull(ivCol)
             .notNull(dvCol);
         for (Constraint c : constraints) {
-            qb.constrain(c.col, c.op, Double.parseDouble(c.val));
+            queryB.constrain(c.col, c.op, Double.parseDouble(c.val));
         }
-        return qb.build();
+        return queryB.build();
     }
 
     private int countRows(String ivCol, String dvCol) throws Exception {
         String sql = "SELECT COUNT(*) FROM \"" + QueryBuilder.esc(tableName) + "\"" + buildWhere(ivCol, dvCol);
-        try (Statement stmt = Database.getConnection().createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            return rs.next() ? rs.getInt(1) : 0;
+        try (Statement satatement = Database.getConnection().createStatement();
+             ResultSet RESULTS = satatement.executeQuery(sql)) {
+            return RESULTS.next() ? RESULTS.getInt(1) : 0;
         }
     }
 
@@ -352,25 +356,32 @@ public class DataAnalysis {
     private void fitAxes() {
         double xMin = Double.MAX_VALUE, xMax = -Double.MAX_VALUE;
         double yMin = Double.MAX_VALUE, yMax = -Double.MAX_VALUE;
+
         for (XYChart.Series<Number, Number> series : chart.getData()) {
             for (XYChart.Data<Number, Number> d : series.getData()) {
                 double x = d.getXValue().doubleValue();
                 double y = d.getYValue().doubleValue();
+
                 xMin = Math.min(xMin, x);
                 xMax = Math.max(xMax, x);
+
                 yMin = Math.min(yMin, y);
                 yMax = Math.max(yMax, y);
             }
         }
         if (xMin == Double.MAX_VALUE) return;
+
         double xPad = (xMax - xMin) * 0.05;
         double yPad = (yMax - yMin) * 0.05;
+
         if (xPad == 0) xPad = 1;
         if (yPad == 0) yPad = 1;
+
         xAxis.setAutoRanging(false);
         xAxis.setLowerBound(xMin - xPad);
         xAxis.setUpperBound(xMax + xPad);
         xAxis.setTickUnit((xMax - xMin) / 10);
+
         yAxis.setAutoRanging(false);
         yAxis.setLowerBound(yMin - yPad);
         yAxis.setUpperBound(yMax + yPad);
