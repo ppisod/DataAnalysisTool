@@ -66,11 +66,9 @@ public class CsvLoader {
 
 
 
-
                                     ps.setNull(i + 1, java.sql.Types.NULL);
                                 }
-                            }
-                            case TEXT -> ps.setString(i + 1, val);
+                            }case TEXT -> ps.setString(i + 1, val);
                         }
                     }
                 }
